@@ -1,3 +1,3 @@
 # Graph
  
-![Graph](ss.png)
+![Graph](ss.PNG)
