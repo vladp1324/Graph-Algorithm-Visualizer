@@ -4,8 +4,10 @@
 #include <conio.h>
 #include <stdio.h> 
 #include <stdlib.h>
+#include <map>
 
 class Example : public olc::PixelGameEngine {
+
 private:
 	//variables
 	int i = 0;
@@ -13,22 +15,24 @@ private:
 	Graph G;
 	std::vector <Node> nodes;
 	std::vector <Edge> edges;
+	std::map <int, olc::vi2d> map_position;
 
 	//buttons
 	struct Button {
-		olc::vd2d pos;
+		olc::vi2d pos;
 		int32_t width;
 		int32_t height;
 		std::string text;
-		olc::vd2d posText;
+		olc::vi2d posText;
 	};
 	std::vector<Button> buttons;
 
 	//buttonsNodes
 	struct ButtonNode {
-		olc::vd2d pos;
-		std::string id;
-		olc::vd2d posText;
+		int idNumber;
+		//olc::vi2d pos;
+		std::string idCh;
+		olc::vi2d posText;
 	};
 	std::vector < ButtonNode > buttonsNodes;
 
@@ -51,8 +55,10 @@ private:
 		for (int i = 0; i < nodes.size(); i++) {
 			char letterChar = nodes[i].id + 'A';
 			std::string letter = std::string(1, letterChar);
-			ButtonNode btnNode = { olc::vd2d{(double)nodes[i].x, (double)nodes[i].y}, letter, olc::vd2d{(double)nodes[i].x - 3, (double)nodes[i].y - 3} };
+			//ButtonNode btnNode = { nodes[i].id, olc::vi2d{nodes[i].x, nodes[i].y}, letter, olc::vi2d{nodes[i].x - 3, nodes[i].y - 3}};
+			ButtonNode btnNode = { nodes[i].id, letter, olc::vi2d{nodes[i].pos.x - 3, nodes[i].pos.y - 3} };
 			buttonsNodes.push_back(btnNode);
+			map_position[nodes[i].id] = nodes[i].pos;
 		}
 	}
 
@@ -69,23 +75,24 @@ private:
 		steps = G.BFS(sourceNode);
 
 		//draw in table source
-		DrawString(355 + steps[0].e.n1.id * 24, 40, "-");
-		DrawString(355 + steps[0].e.n1.id * 24, 60, std::to_string(0));
+		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
+		DrawString(355 + steps[0].e.idn2 * 24, 60, std::to_string(0));
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
 			Edge edge = steps[i].e;
-			Node node1 = edge.n1;
-			Node node2 = edge.n2;
+			Node node1 = nodes[edge.idn1];
+			Node node2 = nodes[edge.idn2];
 			
-			DrawLine(node1.x, node1.y, node2.x, node2.y, olc::RED);
+			DrawLine(node1.pos, node2.pos, olc::RED);
 			
 			//draw in table
-			char letterChar = steps[i].e.n1.id + 'A';
+			char letterChar = steps[i].e.idn1 + 'A';
 			std::string letter = std::string(1, letterChar);
-			DrawString(355 + steps[i].e.n2.id * 24, 40, letter);
-			DrawString(355 + steps[i].e.n2.id * 24, 60, std::to_string(steps[i].dist));
-			DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
+			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+			DrawString(355 + steps[i].e.idn2 * 24, 60, std::to_string(steps[i].dist));
+			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+			//DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
 		}
 
 
@@ -110,7 +117,7 @@ private:
 		steps = G.DFS(sourceNode);
 
 		//draw source node
-		char letterChar = steps[0].e.n1.id + 'A';
+		char letterChar = steps[0].e.idn1 + 'A';
 		std::string letter = std::string(1, letterChar);
 		DrawString(365 + i * 24, 40, letter);
 		DrawString(365 + i * 24, 80, std::to_string(0));
@@ -118,10 +125,10 @@ private:
 		//draw edges
 		for (int i = 0; i <= index; i++) {
 			Edge edge = steps[i].e;
-			Node node1 = edge.n1;
-			Node node2 = edge.n2;
+			Node node1 = nodes[edge.idn1];
+			Node node2 = nodes[edge.idn2];
 
-			DrawLine(node1.x, node1.y, node2.x, node2.y, olc::RED);
+			DrawLine(node1.pos, node2.pos, olc::RED);
 
 			//draw in table
 			int yVal = 0;
@@ -131,11 +138,12 @@ private:
 				xVal += 240;
 			}
 
-			char letterChar = steps[i].e.n2.id + 'A';
+			char letterChar = steps[i].e.idn2 + 'A';
 			std::string letter = std::string(1, letterChar);
 			DrawString(365 + i * 24 + 24 - xVal, 40 + yVal, letter);
 			DrawString(365 + i * 24 + 24 - xVal - 0.015*xVal, 80 + yVal, std::to_string(steps[i].dist));
-			DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
+			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+			//DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
 		}
 
 		static float ed = 0;
@@ -159,24 +167,24 @@ private:
 		steps = G.DIJKSTRA(sourceNode);
 
 		//draw in table source
-		DrawString(355 + steps[0].e.n1.id * 24, 40, "-");
-		DrawString(355 + steps[0].e.n1.id * 24, 60, std::to_string(0));
+		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
+		DrawString(355 + steps[0].e.idn1 * 24, 60, std::to_string(0));
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
 			Edge edge = steps[i].e;
-			Node node1 = edge.n1;
-			Node node2 = edge.n2;
+			Node node1 = nodes[edge.idn1];
+			Node node2 = nodes[edge.idn2];
 
-			DrawLine(node1.x, node1.y, node2.x, node2.y, olc::RED);
+			DrawLine(node1.pos, node2.pos, olc::RED);
 
 			//draw in table
-			char letterChar = steps[i].e.n1.id + 'A';
+			char letterChar = steps[i].e.idn1 + 'A';
 			std::string letter = std::string(1, letterChar);
 
-			DrawString(355 + steps[i].e.n2.id * 24, 40, letter);
-			DrawString(355 + steps[i].e.n2.id * 24, 60, std::to_string(steps[i].dist));
-			DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
+			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+			DrawString(355 + steps[i].e.idn2 * 24, 60, std::to_string(steps[i].dist));
+			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
 		}
 
 		static float ed = 0;
@@ -197,15 +205,24 @@ private:
 
 	void drawEdges() {
 		for (int i = 0; i < edges.size(); i++) {
+
+			/*edges[i].n1.x = map_position[edges[i].n1.id].x;
+			edges[i].n1.y = map_position[edges[i].n1.id].y;
+
+			edges[i].n2.x = map_position[edges[i].n2.id].x;
+			edges[i].n2.y = map_position[edges[i].n2.id].y;
+
 			DrawLine(edges[i].n1.x, edges[i].n1.y, edges[i].n2.x, edges[i].n2.y, olc::YELLOW);
+			*/
+			DrawLine(nodes[edges[i].idn1].pos, nodes[edges[i].idn2].pos, olc::YELLOW);
 		}
 	}
 
 	void drawCosts() {
 		if (showCosts) {
 			for (int i = 0; i < edges.size(); i++) {
-				float posCostX = (edges[i].n1.x + edges[i].n2.x) / 2; posCostX -= 0.02f * posCostX;
-				float posCostY = (edges[i].n1.y + edges[i].n2.y) / 2; posCostY -= 0.01f * posCostY;
+				float posCostX = (nodes[edges[i].idn1].pos.x + nodes[edges[i].idn2].pos.x) / 2; posCostX -= 0.02f * posCostX;
+				float posCostY = (nodes[edges[i].idn1].pos.y + nodes[edges[i].idn2].pos.y) / 2; posCostY -= 0.01f * posCostY;
 				std::string cost = std::to_string(edges[i].cost);
 
 				FillRect(posCostX, posCostY, 18, 10, olc::CYAN);
@@ -219,11 +236,13 @@ private:
 		for (int i = 0; i < buttonsNodes.size(); i++) {
 			ButtonNode node = buttonsNodes[i];
 
-			FillCircle(node.pos.x, node.pos.y, RADIUS);
-			DrawString(node.posText.x, node.posText.y, node.id, olc::MAGENTA);
+			//FillCircle(node.pos.x, node.pos.y, RADIUS);
+			FillCircle(nodes[node.idNumber].pos, RADIUS);
+			DrawString(node.posText.x, node.posText.y, node.idCh, olc::MAGENTA);
 			
 			if (i == sourceNode) {
-				DrawCircle(node.pos.x, node.pos.y, RADIUS+1, olc::RED);
+				//DrawCircle(node.pos.x, node.pos.y, RADIUS+1, olc::RED);
+				DrawCircle(nodes[node.idNumber].pos, RADIUS + 1, olc::RED);
 			}
 		}
 	}
@@ -241,6 +260,7 @@ private:
 		drawCosts();
 		
 		drawNodes();
+		
 	}
 
 	void initButtons() {
@@ -277,7 +297,7 @@ private:
 		animationDijkstraOn = false;
 	}
 
-	void checkButtonsPressed(olc::vd2d mousePos) {
+	void checkButtonsPressed(olc::vi2d mousePos) {
 
 		for (int i = 0; i < buttons.size(); i++) {
 			Button btn = buttons[i];
@@ -321,25 +341,39 @@ private:
 		}
 		
 	}
-	
-	void checkButtonsNodesPressed(olc::vd2d mousePos) {
-		for (int i = 0; i < buttonsNodes.size(); i++) {
-			ButtonNode btn = buttonsNodes[i];
 
-			if (checkCollisionPointCircle(mousePos, btn.pos)) {
-				FillCircle(btn.pos.x, btn.pos.y, RADIUS, olc::GREY);
-				DrawString(btn.posText.x, btn.posText.y, btn.id, olc::DARK_MAGENTA);
+	void checkButtonsNodesPressed(olc::vi2d mousePos) {
+		for (int i = 0; i < buttonsNodes.size(); i++) {
+			ButtonNode& btn = buttonsNodes[i];
+
+			if (checkCollisionPointCircle(mousePos, nodes[btn.idNumber].pos)) {
+				FillCircle(nodes[btn.idNumber].pos, RADIUS, olc::GREY);
+				DrawString(btn.posText.x, btn.posText.y, btn.idCh, olc::DARK_MAGENTA);
 				
 				if (GetMouse(0).bPressed) {
 					resetStateAnimation();
-					sourceNode = i;
+					sourceNode = btn.idNumber;
+				}
+
+				if (GetMouse(0).bHeld) {
+
+
+
+					//if (checkCollisionCircleVectorCircles()) {
+						map_position[btn.idNumber] = { mousePos.x, mousePos.y };
+
+						//btn.pos = { mousePos.x, mousePos.y };
+						nodes[btn.idNumber].pos = { mousePos.x, mousePos.y };
+
+						btn.posText = { mousePos.x - 3, mousePos.y - 3 };
+					//}
 				}
 			}
 		}
 	}
 
 	void handleKeys(){
-		olc::vd2d p = GetMousePos();
+		olc::vi2d p = GetMousePos();
 		checkButtonsPressed(p);
 		checkButtonsNodesPressed(p);
 	}
@@ -349,7 +383,7 @@ private:
 		int yNode = 22;
 
 		for (int i = 0; i < buttonsNodes.size(); i++) {
-			DrawString(xStart + i * 24, yNode, buttonsNodes[i].id);
+			DrawString(xStart + i * 24, yNode, buttonsNodes[i].idCh);
 		}
 
 		DrawString(310, 40, "Prev:");
@@ -366,7 +400,7 @@ private:
 		int yNode = 22;
 
 		for (int i = 0; i < buttonsNodes.size(); i++) {
-			DrawString(xStart + i * 24, yNode, buttonsNodes[i].id);
+			DrawString(xStart + i * 24, yNode, buttonsNodes[i].idCh);
 		}
 
 		DrawString(310, 40, "Prev:");
@@ -428,7 +462,6 @@ int main() {
 /*
 TO DO LIST:
 ______________________
--clasa de animatie
 -referinte si const
 -rezolutie
 */

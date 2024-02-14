@@ -1,11 +1,11 @@
 #include "Graph.h"
 #include "Collision.h"
 
-bool Graph::simulateLineCollision(olc::vd2d p1, olc::vd2d p2)
+bool Graph::simulateLineCollision(olc::vi2d p1, olc::vi2d p2)
 {
 	for (int i = 0; i < nodes.size(); i++) {
-		if (olc::vd2d(p1) != olc::vd2d(nodes[i].x, nodes[i].y) && olc::vd2d(p2) != olc::vd2d(nodes[i].x, nodes[i].y)
-			&& checkCollisionLineCircle(olc::vd2d(p1.x, p1.y), olc::vd2d(p2.x, p2.y), olc::vd2d(nodes[i].x, nodes[i].y))) {
+		if (olc::vi2d(p1) != olc::vi2d(nodes[i].pos.x, nodes[i].pos.y) && olc::vi2d(p2) != olc::vi2d(nodes[i].pos.x, nodes[i].pos.y)
+			&& checkCollisionLineCircle(olc::vi2d(p1.x, p1.y), olc::vi2d(p2.x, p2.y), olc::vi2d(nodes[i].pos.x, nodes[i].pos.y))) {
 			return true;
 		}
 	}
@@ -27,14 +27,14 @@ void Graph::generateNodes()
 		bool foundPosition = true;
 
 		for (int i = 0; i < nodes.size(); i++) {
-			if (checkCollisionCircles(olc::vd2d(x, y), olc::vd2d(nodes[i].x, nodes[i].y)) || simulateLineCollision(olc::vd2d(x, y), olc::vd2d(nodes[i].x, nodes[i].y))) {
+			if (checkCollisionCircles(olc::vi2d(x, y), olc::vi2d(nodes[i].pos.x, nodes[i].pos.y), 6) || simulateLineCollision(olc::vi2d(x, y), olc::vi2d(nodes[i].pos.x, nodes[i].pos.y))) {
 				foundPosition = false;
 				break;
 			}
 		}
 
 		if (foundPosition) {
-			nodes.push_back({ (int)nodes.size(), x, y });
+			nodes.push_back({ (int)nodes.size(), {x, y} });
 		}
 	}
 }
@@ -44,8 +44,8 @@ void Graph::dfs(int nc, bool ver[], Edge e)
 	for (int i = 0; i < v[nc].size(); i++) {
 		int nv = v[nc][i].id;
 
-		if ((nc == e.n1.id && nv == e.n2.id) ||
-			(nc == e.n2.id && nv == e.n1.id)
+		if ((nc == e.idn1 && nv == e.idn2) ||
+			(nc == e.idn2 && nv == e.idn1)
 			) {
 			//nu folosi muchia
 			continue;
@@ -60,13 +60,12 @@ void Graph::dfs(int nc, bool ver[], Edge e)
 
 void Graph::refreshGraph()
 {
-	//v->clear();
 	for (int i = 0; i < nrNodes; i++)
 		v[i].clear();
 
 	for (auto e : edges) {
-		v[e.n1.id].push_back(e.n2);
-		v[e.n2.id].push_back(e.n1);
+		v[e.idn1].push_back(nodes[e.idn2]);
+		v[e.idn2].push_back(nodes[e.idn1]);
 	}
 }
 
@@ -112,15 +111,15 @@ void Graph::generateEdges()
 	//generate i->(n-1 - i) (n * (n-1) / 2 edges)
 	for (int i = 0; i < nrNodes; i++) {
 		for (int j = i + 1; j < nrNodes; j++) {
-			edges.push_back({ nodes[i], nodes[j] });
+			edges.push_back({ i, j });
 		}
 	}
 
-	//delete all edges that colide with a node
+	//delete all edges that collide with a node
 	std::vector< Edge > edgesCopy;
 
 	for (auto e : edges) {
-		if (!simulateLineCollision(olc::vd2d(e.n1.x, e.n1.y), olc::vd2d(e.n2.x, e.n2.y)))
+		if (!simulateLineCollision(nodes[e.idn1].pos, nodes[e.idn2].pos))
 			edgesCopy.push_back(e);
 	}
 
@@ -141,8 +140,8 @@ void Graph::generateEdges()
 		bool ver[N_MAX];
 		std::fill(ver, ver + N_MAX, 0);
 
-		dfs(edges[randomEdge].n1.id, ver, edges[randomEdge]);
-		if (ver[edges[randomEdge].n2.id]) {
+		dfs(edges[randomEdge].idn1, ver, edges[randomEdge]);
+		if (ver[edges[randomEdge].idn2]) {
 			for (int i = 0; i < edges.size(); i++) {
 				if (randomEdge != i) {
 					edgesCopy.push_back(edges[i]);
@@ -154,6 +153,8 @@ void Graph::generateEdges()
 		}
 	}
 }
+
+
 
 std::vector<edge_for_anim> Graph::BFS(int source)
 {
@@ -175,18 +176,18 @@ std::vector<edge_for_anim> Graph::BFS(int source)
 		//std::cout << nc << '\n';
 
 		for (auto e : edges) {
-			if (e.n1.id != nc && e.n2.id != nc)
+			if (e.idn1 != nc && e.idn2 != nc)
 				continue;
 
-			Node nv = e.n2;
+			Node nv = nodes[e.idn2];
 
-			if (e.n2.id == nc)
-				nv = e.n1;
+			if (e.idn2 == nc)
+				nv = nodes[e.idn1];
 
 			if (d[nv.id] == -1) {
 				d[nv.id] = d[nc] + 1;
 				q.push(nv.id);
-				ans.push_back(edge_for_anim{ {nodes[nc], nodes[nv.id]}, d[nv.id] });
+				ans.push_back(edge_for_anim{ {nc, nv.id}, d[nv.id] });
 			}
 
 		}
@@ -204,22 +205,22 @@ void Graph::dfs_animation(int nc, bool vis[], int& time)
 	nrNotVis--;
 
 	for (auto e : edges) {
-		if (e.n1.id != nc && e.n2.id != nc)
+		if (e.idn1 != nc && e.idn2 != nc)
 			continue;
 
-		Node nv = e.n2;
+		Node nv = nodes[e.idn2];
 
-		if (e.n2.id == nc)
-			nv = e.n1;
+		if (e.idn2 == nc)
+			nv = nodes[e.idn1];
 
 		if (not vis[nv.id]) {
 			time++;
-			dfs_anim.push_back(edge_for_anim{ { nodes[nc], nv }, time });
+			dfs_anim.push_back(edge_for_anim{ { nc, nv.id }, time });
 			dfs_animation(nv.id, vis, time);
 
 			if (nrNotVis > 0) {
 				time++;
-				dfs_anim.push_back(edge_for_anim{ { nv, nodes[nc] }, time });
+				dfs_anim.push_back(edge_for_anim{ { nv.id, nc }, time });
 			}
 		}
 	}
@@ -258,13 +259,13 @@ std::vector<edge_for_anim> Graph::DIJKSTRA(int source)
 
 		if (!vis[nc]) {
 			for (auto e : edges) {
-				if (e.n1.id != nc && e.n2.id != nc)
+				if (e.idn1 != nc && e.idn2 != nc)
 					continue;
 
 				int cnv = e.cost;
-				int nv = e.n2.id;
-				if (e.n2.id == nc)
-					nv = e.n1.id;
+				int nv = e.idn2;
+				if (e.idn2 == nc)
+					nv = e.idn1;
 
 				if (cnv + d[nc] < d[nv]) {
 					d[nv] = cnv + d[nc];
@@ -273,7 +274,7 @@ std::vector<edge_for_anim> Graph::DIJKSTRA(int source)
 			}
 
 			vis[nc] = true;
-			ans.push_back(edge_for_anim{ {nodes[prev], nodes[nc]}, d[nc] });
+			ans.push_back(edge_for_anim{ { prev, nc}, d[nc] });
 		}
 
 	}
@@ -302,4 +303,14 @@ std::vector<Node> Graph::getNodes()
 std::vector<Edge> Graph::getEdges()
 {
 	return this->edges;
+}
+
+void Graph::setNodes(const std::vector<Node>& nodes)
+{
+	this->nodes = nodes;
+}
+
+void Graph::setEdges(const std::vector<Edge>& edges)
+{
+	this->edges = edges;
 }

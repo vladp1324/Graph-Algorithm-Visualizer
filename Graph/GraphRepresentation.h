@@ -1,15 +1,16 @@
 #pragma once
+#include "olcPixelGameEngine.h"
 #include <cstdint>
 #include <cstdlib>
+
 struct Node {
 	int id;
-	int32_t x;
-	int32_t y;
+	olc::vi2d pos;
 };
 
 struct Edge {
-	Node n1;
-	Node n2;
+	int idn1;
+	int idn2;
 	int cost = 1 + rand() % 15;
 };
 

@@ -15,7 +15,7 @@ private:
 	std::vector< Node > nodes;
 	std::vector < Node > v[N_MAX];
 
-	bool simulateLineCollision(olc::vd2d p1, olc::vd2d p2);
+	bool simulateLineCollision(olc::vi2d p1, olc::vi2d p2);
 
 	void generateNodes();
 
@@ -38,6 +38,10 @@ public:
 	std::vector< Node > getNodes();
 	
 	std::vector< Edge > getEdges();
+
+	void setNodes(const std::vector< Node >& nodes);
+
+	void setEdges(const std::vector< Edge >& edges);
 
 	std::vector <edge_for_anim> BFS(int source);
 
