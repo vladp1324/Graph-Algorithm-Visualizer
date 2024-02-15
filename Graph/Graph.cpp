@@ -27,7 +27,7 @@ void Graph::generateNodes()
 		bool foundPosition = true;
 
 		for (int i = 0; i < nodes.size(); i++) {
-			if (checkCollisionCircles(olc::vi2d(x, y), olc::vi2d(nodes[i].pos.x, nodes[i].pos.y), 6) || simulateLineCollision(olc::vi2d(x, y), olc::vi2d(nodes[i].pos.x, nodes[i].pos.y))) {
+			if (checkCollisionCircles(olc::vi2d(x, y), nodes[i].pos, 6) || simulateLineCollision(olc::vi2d(x, y), nodes[i].pos)) {
 				foundPosition = false;
 				break;
 			}

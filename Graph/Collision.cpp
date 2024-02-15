@@ -56,6 +56,9 @@ bool checkCollisionPointCircle(olc::vi2d p, olc::vi2d c)
 bool checkCollisionCircleVectorCircles(olc::vi2d c, std::vector<olc::vi2d> vc)
 {
 	for (auto const& circle : vc) {
+		if (c.x == circle.x && c.y == circle.y)
+			continue;
+
 		if (checkCollisionCircles(c, circle, 2))
 			return true;
 	}

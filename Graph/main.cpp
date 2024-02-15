@@ -43,6 +43,11 @@ private:
 
 	bool showCosts;
 
+	bool isButtonSelected;
+	
+	int index = 0;
+	std::vector<edge_for_anim> steps;
+
 	void constructGraph() {
 		showCosts = false;
 		sourceNode = -1;
@@ -62,8 +67,6 @@ private:
 		}
 	}
 
-	int index = 0;
-	std::vector<edge_for_anim> steps;
 
 	void UpdateBFSAnimation(float deltaTime) {
 		if (animationBfsOn == false)
@@ -76,7 +79,7 @@ private:
 
 		//draw in table source
 		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
-		DrawString(355 + steps[0].e.idn2 * 24, 60, std::to_string(0));
+		DrawString(355 + steps[0].e.idn1 * 24, 60, "0");
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
@@ -168,7 +171,7 @@ private:
 
 		//draw in table source
 		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
-		DrawString(355 + steps[0].e.idn1 * 24, 60, std::to_string(0));
+		DrawString(355 + steps[0].e.idn1 * 24, 60, "0");
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
@@ -234,16 +237,19 @@ private:
 
 	void drawNodes() {
 		for (int i = 0; i < buttonsNodes.size(); i++) {
+			if (i == sourceNode)
+				continue;
+
 			ButtonNode node = buttonsNodes[i];
 
-			//FillCircle(node.pos.x, node.pos.y, RADIUS);
 			FillCircle(nodes[node.idNumber].pos, RADIUS);
-			DrawString(node.posText.x, node.posText.y, node.idCh, olc::MAGENTA);
-			
-			if (i == sourceNode) {
-				//DrawCircle(node.pos.x, node.pos.y, RADIUS+1, olc::RED);
-				DrawCircle(nodes[node.idNumber].pos, RADIUS + 1, olc::RED);
-			}
+			DrawString(nodes[node.idNumber].pos.x - 3, nodes[node.idNumber].pos.y - 3, node.idCh, olc::MAGENTA);
+		}
+
+		if (sourceNode != -1) {//draw selected node
+			FillCircle(nodes[sourceNode].pos, RADIUS);
+			DrawString(nodes[sourceNode].pos.x - 3, nodes[sourceNode].pos.y - 3, buttonsNodes[sourceNode].idCh, olc::MAGENTA);
+			DrawCircle(nodes[sourceNode].pos, RADIUS + 1, olc::RED);
 		}
 	}
 
@@ -298,11 +304,10 @@ private:
 	}
 
 	void checkButtonsPressed(olc::vi2d mousePos) {
-
 		for (int i = 0; i < buttons.size(); i++) {
 			Button btn = buttons[i];
 
-			if (checkCollisionPointRect(mousePos, btn.pos, btn.width, btn.height)) {
+			if (!isButtonSelected && checkCollisionPointRect(mousePos, btn.pos, btn.width, btn.height)) {
 				//select button
 				FillRect(btn.pos.x, btn.pos.y, btn.width, btn.height, olc::VERY_DARK_GREY);
 				DrawString(btn.posText.x, btn.posText.y, btn.text, olc::GREY);
@@ -339,7 +344,6 @@ private:
 				}
 			}
 		}
-		
 	}
 
 	void checkButtonsNodesPressed(olc::vi2d mousePos) {
@@ -347,27 +351,23 @@ private:
 			ButtonNode& btn = buttonsNodes[i];
 
 			if (checkCollisionPointCircle(mousePos, nodes[btn.idNumber].pos)) {
-				FillCircle(nodes[btn.idNumber].pos, RADIUS, olc::GREY);
-				DrawString(btn.posText.x, btn.posText.y, btn.idCh, olc::DARK_MAGENTA);
-				
+				if (!isButtonSelected) {
+					FillCircle(nodes[btn.idNumber].pos, RADIUS, olc::GREY);
+					DrawString(nodes[btn.idNumber].pos.x - 3, nodes[btn.idNumber].pos.y - 3, btn.idCh, olc::DARK_MAGENTA);
+				}
+
 				if (GetMouse(0).bPressed) {
 					resetStateAnimation();
 					sourceNode = btn.idNumber;
 				}
 
-				if (GetMouse(0).bHeld) {
-
-
-
-					//if (checkCollisionCircleVectorCircles()) {
-						map_position[btn.idNumber] = { mousePos.x, mousePos.y };
-
-						//btn.pos = { mousePos.x, mousePos.y };
-						nodes[btn.idNumber].pos = { mousePos.x, mousePos.y };
-
-						btn.posText = { mousePos.x - 3, mousePos.y - 3 };
-					//}
+				if (btn.idNumber == sourceNode && GetMouse(0).bHeld) {
+					isButtonSelected = true;
+					nodes[sourceNode].pos = { mousePos.x, mousePos.y };
 				}
+
+				if (GetMouse(0).bReleased)
+					isButtonSelected = false;
 			}
 		}
 	}
@@ -425,7 +425,7 @@ private:
 
 public:
 	Example() {
-		sAppName = "Example";
+		sAppName = "GraphVisualizer";
 		constructGraph();
 	}
 
@@ -458,10 +458,3 @@ int main() {
 
 	return 0;
 }
-
-/*
-TO DO LIST:
-______________________
--referinte si const
--rezolutie
-*/
