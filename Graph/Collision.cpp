@@ -1,6 +1,6 @@
 #include "Collision.h"
 
-bool checkCollisionCircles(olc::vi2d c1, olc::vi2d c2, int nrCircles)
+bool checkCollisionCircles(const olc::vi2d& c1, const olc::vi2d& c2, const int& nrCircles)
 {
     int32_t distX = c1.x - c2.x;
     int32_t distY = c1.y - c2.y;
@@ -9,7 +9,7 @@ bool checkCollisionCircles(olc::vi2d c1, olc::vi2d c2, int nrCircles)
     return distance <= RADIUS * nrCircles;
 }
 
-bool checkCollisionLineCircle(olc::vi2d P1, olc::vi2d P2, olc::vi2d C)
+bool checkCollisionLineCircle(const olc::vi2d& P1, const olc::vi2d& P2, const olc::vi2d& C)
 {
 	olc::vi2d D = { P2.x - P1.x, P2.y - P1.y };
 	olc::vi2d F = { P1.x - C.x, P1.y - C.y };
@@ -38,13 +38,13 @@ bool checkCollisionLineCircle(olc::vi2d P1, olc::vi2d P2, olc::vi2d C)
 	return false;
 }
 
-bool checkCollisionPointRect(olc::vi2d p, olc::vi2d rect, int32_t width, int32_t height)
+bool checkCollisionPointRect(const olc::vi2d& p, const olc::vi2d& rect, const int32_t& width, const int32_t& height)
 {
 	return rect.x <= p.x && p.x <= rect.x + width &&
 		rect.y <= p.y && p.y <= rect.y + height;
 }
 
-bool checkCollisionPointCircle(olc::vi2d p, olc::vi2d c)
+bool checkCollisionPointCircle(const olc::vi2d& p, const olc::vi2d& c)
 {
 	int32_t distX = p.x - c.x;
 	int32_t distY = p.y - c.y;
@@ -53,7 +53,7 @@ bool checkCollisionPointCircle(olc::vi2d p, olc::vi2d c)
 	return distance <= RADIUS;
 }
 
-bool checkCollisionCircleVectorCircles(olc::vi2d c, std::vector<olc::vi2d> vc)
+bool checkCollisionCircleVectorCircles(const olc::vi2d& c, const std::vector<olc::vi2d>& vc)
 {
 	for (auto const& circle : vc) {
 		if (c.x == circle.x && c.y == circle.y)
@@ -61,6 +61,18 @@ bool checkCollisionCircleVectorCircles(olc::vi2d c, std::vector<olc::vi2d> vc)
 
 		if (checkCollisionCircles(c, circle, 2))
 			return true;
+	}
+
+	return false;
+}
+
+bool simulateLineCollision(const olc::vi2d& p1, const olc::vi2d& p2, const std::vector<olc::vi2d>& vc)
+{
+	for (const auto& pos : vc) {
+		if (p1 != olc::vi2d(pos.x, pos.y) && p2 != olc::vi2d(pos.x, pos.y)
+			&& checkCollisionLineCircle(olc::vi2d(p1.x, p1.y), olc::vi2d(p2.x, p2.y), olc::vi2d(pos.x, pos.y))) {
+			return true;
+		}
 	}
 
 	return false;

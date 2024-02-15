@@ -4,33 +4,42 @@
 #include <conio.h>
 #include <stdio.h> 
 #include <stdlib.h>
-#include <map>
 
 class Example : public olc::PixelGameEngine {
 
 private:
 	//variables
-	int i = 0;
+	
 	//graph
 	Graph G;
 	std::vector <Node> nodes;
 	std::vector <Edge> edges;
-	std::map <int, olc::vi2d> map_position;
+	
+	//button type
+	enum ButtonType {
+		GENERATE,
+		COSTS,
+		BFS,
+		DFS,
+		DIJKSTRA
+	};
 
 	//buttons
 	struct Button {
 		olc::vi2d pos;
 		int32_t width;
 		int32_t height;
+
 		std::string text;
 		olc::vi2d posText;
+		
+		ButtonType type;
 	};
 	std::vector<Button> buttons;
 
 	//buttonsNodes
 	struct ButtonNode {
 		int idNumber;
-		//olc::vi2d pos;
 		std::string idCh;
 		olc::vi2d posText;
 	};
@@ -57,18 +66,15 @@ private:
 		nodes = G.getNodes();
 		edges = G.getEdges();
 
-		for (int i = 0; i < nodes.size(); i++) {
-			char letterChar = nodes[i].id + 'A';
+		for (const auto& node : nodes) {
+			char letterChar = node.id + 'A';
 			std::string letter = std::string(1, letterChar);
-			//ButtonNode btnNode = { nodes[i].id, olc::vi2d{nodes[i].x, nodes[i].y}, letter, olc::vi2d{nodes[i].x - 3, nodes[i].y - 3}};
-			ButtonNode btnNode = { nodes[i].id, letter, olc::vi2d{nodes[i].pos.x - 3, nodes[i].pos.y - 3} };
+			ButtonNode btnNode = { node.id, letter, olc::vi2d{node.pos.x - 3, node.pos.y - 3} };
 			buttonsNodes.push_back(btnNode);
-			map_position[nodes[i].id] = nodes[i].pos;
 		}
 	}
 
-
-	void UpdateBFSAnimation(float deltaTime) {
+	void UpdateBFSAnimation(const float& deltaTime) {
 		if (animationBfsOn == false)
 			return;
 
@@ -95,7 +101,6 @@ private:
 			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
 			DrawString(355 + steps[i].e.idn2 * 24, 60, std::to_string(steps[i].dist));
 			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
-			//DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
 		}
 
 
@@ -110,7 +115,7 @@ private:
 		ed += deltaTime;
 	}
 
-	void UpdateDFSAnimation(float deltaTime) {
+	void UpdateDFSAnimation(const float& deltaTime) {
 		if (animationDfsOn == false)
 			return;
 
@@ -122,8 +127,8 @@ private:
 		//draw source node
 		char letterChar = steps[0].e.idn1 + 'A';
 		std::string letter = std::string(1, letterChar);
-		DrawString(365 + i * 24, 40, letter);
-		DrawString(365 + i * 24, 80, std::to_string(0));
+		DrawString(365, 40, letter);
+		DrawString(365, 80, std::to_string(0));
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
@@ -146,7 +151,6 @@ private:
 			DrawString(365 + i * 24 + 24 - xVal, 40 + yVal, letter);
 			DrawString(365 + i * 24 + 24 - xVal - 0.015*xVal, 80 + yVal, std::to_string(steps[i].dist));
 			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
-			//DrawCircle(steps[i].e.n2.x, steps[i].e.n2.y, RADIUS + 1, olc::RED);
 		}
 
 		static float ed = 0;
@@ -160,7 +164,7 @@ private:
 
 	}
 
-	void UpdateDijkstraAnimation(float deltaTime) {
+	void UpdateDijkstraAnimation(const float& deltaTime) {
 		if (animationDijkstraOn == false)
 			return;
 
@@ -207,43 +211,40 @@ private:
 	}
 
 	void drawEdges() {
-		for (int i = 0; i < edges.size(); i++) {
-
-			/*edges[i].n1.x = map_position[edges[i].n1.id].x;
-			edges[i].n1.y = map_position[edges[i].n1.id].y;
-
-			edges[i].n2.x = map_position[edges[i].n2.id].x;
-			edges[i].n2.y = map_position[edges[i].n2.id].y;
-
-			DrawLine(edges[i].n1.x, edges[i].n1.y, edges[i].n2.x, edges[i].n2.y, olc::YELLOW);
-			*/
-			DrawLine(nodes[edges[i].idn1].pos, nodes[edges[i].idn2].pos, olc::YELLOW);
+		for (const auto& edge : edges) {
+			DrawLine(nodes[edge.idn1].pos, nodes[edge.idn2].pos, olc::YELLOW);
 		}
 	}
 
 	void drawCosts() {
 		if (showCosts) {
-			for (int i = 0; i < edges.size(); i++) {
-				float posCostX = (nodes[edges[i].idn1].pos.x + nodes[edges[i].idn2].pos.x) / 2; posCostX -= 0.02f * posCostX;
-				float posCostY = (nodes[edges[i].idn1].pos.y + nodes[edges[i].idn2].pos.y) / 2; posCostY -= 0.01f * posCostY;
-				std::string cost = std::to_string(edges[i].cost);
+			for (const auto& edge : edges) {
+				float posCostX = (nodes[edge.idn1].pos.x + nodes[edge.idn2].pos.x) / 2 - 9;
+				float posCostY = (nodes[edge.idn1].pos.y + nodes[edge.idn2].pos.y) / 2 - 5;
+
+				std::string cost = std::to_string(edge.cost);
 
 				FillRect(posCostX, posCostY, 18, 10, olc::CYAN);
 				DrawRect(posCostX - 1, posCostY - 1, 19, 11, olc::WHITE);
-				DrawString(posCostX + 1, posCostY + 1, cost, olc::RED);
+				
+				float posTextX = posCostX + 1;
+				float posTextY = posCostY + 1;
+				
+				if (edge.cost < 10)
+					posTextX += 4;
+
+				DrawString(posTextX, posTextY, cost, olc::RED);
 			}
 		}
 	}
 
 	void drawNodes() {
-		for (int i = 0; i < buttonsNodes.size(); i++) {
-			if (i == sourceNode)
+		for (const auto& node_button : buttonsNodes) {
+			if (node_button.idNumber == sourceNode)
 				continue;
 
-			ButtonNode node = buttonsNodes[i];
-
-			FillCircle(nodes[node.idNumber].pos, RADIUS);
-			DrawString(nodes[node.idNumber].pos.x - 3, nodes[node.idNumber].pos.y - 3, node.idCh, olc::MAGENTA);
+			FillCircle(nodes[node_button.idNumber].pos, RADIUS);
+			DrawString(nodes[node_button.idNumber].pos.x - 3, nodes[node_button.idNumber].pos.y - 3, node_button.idCh, olc::MAGENTA);
 		}
 
 		if (sourceNode != -1) {//draw selected node
@@ -253,7 +254,7 @@ private:
 		}
 	}
 
-	void drawGraph(float deltaTime) {
+	void drawGraph(const float& deltaTime) {
 		
 		drawEdges();
 		
@@ -266,15 +267,14 @@ private:
 		drawCosts();
 		
 		drawNodes();
-		
 	}
 
 	void initButtons() {
-		Button buttonGenerateGraph = { {60, 260}, 75, 20, "Generate", {66, 267} };
-		Button buttonShowCosts = { {200, 260}, 50, 20, "Costs", {206, 267} };
-		Button buttonStartBfs = { {340, 230}, 35, 20, "BFS", {346, 237} };
-		Button buttonStartDfs = { {410, 230}, 35, 20, "DFS", {416, 237} };
-		Button buttonStartDijkstra = { {480, 230}, 75, 20, "DIJKSTRA", {486, 237} };
+		Button buttonGenerateGraph = { {60, 260}, 75, 20, "Generate", {66, 267}, GENERATE};
+		Button buttonShowCosts = { {200, 260}, 50, 20, "Costs", {206, 267}, COSTS};
+		Button buttonStartBfs = { {340, 230}, 35, 20, "BFS", {346, 237}, BFS};
+		Button buttonStartDfs = { {410, 230}, 35, 20, "DFS", {416, 237}, DFS};
+		Button buttonStartDijkstra = { {480, 230}, 75, 20, "DIJKSTRA", {486, 237}, DIJKSTRA};
 
 		buttons.push_back(buttonGenerateGraph);
 		buttons.push_back(buttonShowCosts);
@@ -284,7 +284,7 @@ private:
 	}
 
 	void drawButtons() {
-		for (auto btn : buttons) {
+		for (const auto& btn : buttons) {
 			FillRect(btn.pos.x, btn.pos.y, btn.width, btn.height, olc::DARK_GREY);
 			DrawString(btn.posText.x, btn.posText.y, btn.text, olc::WHITE);
 		}
@@ -303,10 +303,8 @@ private:
 		animationDijkstraOn = false;
 	}
 
-	void checkButtonsPressed(olc::vi2d mousePos) {
-		for (int i = 0; i < buttons.size(); i++) {
-			Button btn = buttons[i];
-
+	void checkButtonsPressed(const olc::vi2d& mousePos) {
+		for (const auto& btn : buttons) {
 			if (!isButtonSelected && checkCollisionPointRect(mousePos, btn.pos, btn.width, btn.height)) {
 				//select button
 				FillRect(btn.pos.x, btn.pos.y, btn.width, btn.height, olc::VERY_DARK_GREY);
@@ -314,26 +312,26 @@ private:
 
 				//handle mouse pressed
 				if (GetMouse(0).bPressed) {
-					switch (i) {
-					case 0: //button generate graph
+					switch (btn.type) {
+					case GENERATE: //button generate graph
 						resetStateAnimation();
 						constructGraph();
 						break;
 					
-					case 1: //button show costs
+					case COSTS: //button show costs
 						showCosts = (bool) (1 - (int)showCosts);
 						break;
 					
-					case 2: //button start bfs
+					case BFS: //button start bfs
 						resetStateAnimation();
 						animationBfsOn = true;
 						break;
 					
-					case 3: //button start dfs
+					case DFS: //button start dfs
 						resetStateAnimation();
 						animationDfsOn = true;
 						break;
-					case 4: //button start dijkstra
+					case DIJKSTRA: //button start dijkstra
 						resetStateAnimation();
 						animationDijkstraOn = true;
 						break;
@@ -346,22 +344,20 @@ private:
 		}
 	}
 
-	void checkButtonsNodesPressed(olc::vi2d mousePos) {
-		for (int i = 0; i < buttonsNodes.size(); i++) {
-			ButtonNode& btn = buttonsNodes[i];
-
-			if (checkCollisionPointCircle(mousePos, nodes[btn.idNumber].pos)) {
+	void checkButtonsNodesPressed(const olc::vi2d& mousePos) {
+		for (const auto& node_button : buttonsNodes) {
+			if (checkCollisionPointCircle(mousePos, nodes[node_button.idNumber].pos)) {
 				if (!isButtonSelected) {
-					FillCircle(nodes[btn.idNumber].pos, RADIUS, olc::GREY);
-					DrawString(nodes[btn.idNumber].pos.x - 3, nodes[btn.idNumber].pos.y - 3, btn.idCh, olc::DARK_MAGENTA);
+					FillCircle(nodes[node_button.idNumber].pos, RADIUS, olc::GREY);
+					DrawString(nodes[node_button.idNumber].pos.x - 3, nodes[node_button.idNumber].pos.y - 3, node_button.idCh, olc::DARK_MAGENTA);
 				}
 
 				if (GetMouse(0).bPressed) {
 					resetStateAnimation();
-					sourceNode = btn.idNumber;
+					sourceNode = node_button.idNumber;
 				}
 
-				if (btn.idNumber == sourceNode && GetMouse(0).bHeld) {
+				if (node_button.idNumber == sourceNode && GetMouse(0).bHeld) {
 					isButtonSelected = true;
 					nodes[sourceNode].pos = { mousePos.x, mousePos.y };
 				}
@@ -382,8 +378,8 @@ private:
 		int xStart = 355;
 		int yNode = 22;
 
-		for (int i = 0; i < buttonsNodes.size(); i++) {
-			DrawString(xStart + i * 24, yNode, buttonsNodes[i].idCh);
+		for (const auto& node_button : buttonsNodes) {
+			DrawString(xStart + node_button.idNumber * 24, yNode, node_button.idCh);
 		}
 
 		DrawString(310, 40, "Prev:");
@@ -399,8 +395,8 @@ private:
 		int xStart = 355;
 		int yNode = 22;
 
-		for (int i = 0; i < buttonsNodes.size(); i++) {
-			DrawString(xStart + i * 24, yNode, buttonsNodes[i].idCh);
+		for (const auto& node_button : buttonsNodes) {
+			DrawString(xStart + node_button.idNumber * 24, yNode, node_button.idCh);
 		}
 
 		DrawString(310, 40, "Prev:");

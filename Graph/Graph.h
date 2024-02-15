@@ -15,39 +15,40 @@ private:
 	std::vector< Node > nodes;
 	std::vector < Node > v[N_MAX];
 
-	bool simulateLineCollision(olc::vi2d p1, olc::vi2d p2);
+	std::vector <edge_for_anim> dfs_anim;
+	int nrNotVis;
+
+	const int inf = 2e9;
 
 	void generateNodes();
 
-	void dfs(int nc, bool ver[], Edge e);
+	void dfs(const int& nc, bool ver[], const Edge& e) const;
 
 	void refreshGraph();
 
 	void generateEdges();
-	
-	std::vector <edge_for_anim> dfs_anim;
-	int nrNotVis;
 
-	void dfs_animation(int nc, bool vis[], int& time);
+	void dfs_animation(const int& nc, bool vis[], int& time);
 
-	const int inf = 2e9;
 
 public:
 	Graph();
 
-	std::vector< Node > getNodes();
+	std::vector< Node > getNodes() const;
 	
-	std::vector< Edge > getEdges();
+	std::vector< Edge > getEdges() const;
 
-	void setNodes(const std::vector< Node >& nodes);
+	void setNodes(const std::vector<Node>& nodes);
 
-	void setEdges(const std::vector< Edge >& edges);
+	void setEdges(const std::vector<Edge>& edges);
 
-	std::vector <edge_for_anim> BFS(int source);
+	std::vector <edge_for_anim> BFS(const int& source) const;
 
-	std::vector <edge_for_anim> DFS(int source);
+	std::vector <edge_for_anim> DFS(const int& source);
 
-	std::vector <edge_for_anim> DIJKSTRA(int source);
+	std::vector <edge_for_anim> DIJKSTRA(const int& source) const;
 
 	void generateGraph();
+
+	std::vector <olc::vi2d> getNodesPositions(const std::vector <Node>& nodes) const;
 };

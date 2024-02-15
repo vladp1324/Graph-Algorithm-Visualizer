@@ -1,12 +1,14 @@
 #pragma once
 #include "olcPixelGameEngine.h"
 
-bool checkCollisionCircles(olc::vi2d c1, olc::vi2d c2, int nrCircles);
+bool checkCollisionCircles(const olc::vi2d& c1, const olc::vi2d& c2, const int& nrCircles);
 
-bool checkCollisionLineCircle(olc::vi2d P1, olc::vi2d P2, olc::vi2d C);
+bool checkCollisionLineCircle(const olc::vi2d& P1, const olc::vi2d& P2, const olc::vi2d& C);
 
-bool checkCollisionPointRect(olc::vi2d p, olc::vi2d rect, int32_t width, int32_t height);
+bool checkCollisionPointRect(const olc::vi2d& p, const olc::vi2d& rect, const int32_t& width, const int32_t& height);
 
-bool checkCollisionPointCircle(olc::vi2d p, olc::vi2d c);
+bool checkCollisionPointCircle(const olc::vi2d& p, const olc::vi2d& c);
 
-bool checkCollisionCircleVectorCircles(olc::vi2d c, std::vector<olc::vi2d> vc);
+bool checkCollisionCircleVectorCircles(const olc::vi2d& c, const std::vector<olc::vi2d>& vc);
+
+bool simulateLineCollision(const olc::vi2d& p1, const olc::vi2d& p2, const std::vector<olc::vi2d>& vc);
