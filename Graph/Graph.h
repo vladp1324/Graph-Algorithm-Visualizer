@@ -13,7 +13,7 @@ private:
 
 	std::vector< Edge > edges;
 	std::vector< Node > nodes;
-	std::vector < Node > v[N_MAX];
+	std::vector < std::pair<int, int> > adj[N_MAX];
 
 	std::vector <edge_for_anim> dfs_anim;
 	int nrNotVis;
@@ -47,6 +47,8 @@ public:
 	std::vector <edge_for_anim> DFS(const int& source);
 
 	std::vector <edge_for_anim> DIJKSTRA(const int& source) const;
+
+	std::vector <edge_for_anim> PRIM(const int& source) const;
 
 	void generateGraph();
 

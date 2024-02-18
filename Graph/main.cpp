@@ -21,7 +21,8 @@ private:
 		COSTS,
 		BFS,
 		DFS,
-		DIJKSTRA
+		DIJKSTRA,
+		PRIM
 	};
 
 	//buttons
@@ -49,6 +50,7 @@ private:
 	bool animationBfsOn;
 	bool animationDfsOn;
 	bool animationDijkstraOn;
+	bool animationPrimOn;
 
 	bool showCosts;
 
@@ -77,11 +79,6 @@ private:
 	void UpdateBFSAnimation(const float& deltaTime) {
 		if (animationBfsOn == false)
 			return;
-
-		if (sourceNode == -1)
-			sourceNode = 0;
-
-		steps = G.BFS(sourceNode);
 
 		//draw in table source
 		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
@@ -118,11 +115,6 @@ private:
 	void UpdateDFSAnimation(const float& deltaTime) {
 		if (animationDfsOn == false)
 			return;
-
-		if (sourceNode == -1)
-			sourceNode = 0;
-
-		steps = G.DFS(sourceNode);
 
 		//draw source node
 		char letterChar = steps[0].e.idn1 + 'A';
@@ -168,11 +160,6 @@ private:
 		if (animationDijkstraOn == false)
 			return;
 
-		if (sourceNode == -1)
-			sourceNode = 0;
-
-		steps = G.DIJKSTRA(sourceNode);
-
 		//draw in table source
 		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
 		DrawString(355 + steps[0].e.idn1 * 24, 60, "0");
@@ -193,6 +180,46 @@ private:
 			DrawString(355 + steps[i].e.idn2 * 24, 60, std::to_string(steps[i].dist));
 			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
 		}
+
+		static float ed = 0;
+
+		if (ed > 1.0f) {
+			if (index + 1 < steps.size())
+				index++;
+			ed = 0;
+		}
+
+		ed += deltaTime;
+	}
+
+	void UpdatePrimAnimation(const float& deltaTime)
+	{
+		if (animationPrimOn == false)
+			return;
+
+		int totalCost = 0;
+
+		//draw in table source
+		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
+
+		//draw edges
+		for (int i = 0; i <= index; i++) {
+			Edge edge = steps[i].e;
+			Node node1 = nodes[edge.idn1];
+			Node node2 = nodes[edge.idn2];
+
+			DrawLine(node1.pos, node2.pos, olc::RED);
+
+			//draw in table
+			char letterChar = steps[i].e.idn1 + 'A';
+			std::string letter = std::string(1, letterChar);
+
+			totalCost += steps[i].dist;
+			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+		}
+
+		DrawString(400, 60, std::to_string(totalCost));
 
 		static float ed = 0;
 
@@ -263,6 +290,8 @@ private:
 		UpdateDFSAnimation(deltaTime);
 
 		UpdateDijkstraAnimation(deltaTime);
+
+		UpdatePrimAnimation(deltaTime);
 		
 		drawCosts();
 		
@@ -272,15 +301,17 @@ private:
 	void initButtons() {
 		Button buttonGenerateGraph = { {60, 260}, 75, 20, "Generate", {66, 267}, GENERATE};
 		Button buttonShowCosts = { {200, 260}, 50, 20, "Costs", {206, 267}, COSTS};
-		Button buttonStartBfs = { {340, 230}, 35, 20, "BFS", {346, 237}, BFS};
-		Button buttonStartDfs = { {410, 230}, 35, 20, "DFS", {416, 237}, DFS};
-		Button buttonStartDijkstra = { {480, 230}, 75, 20, "DIJKSTRA", {486, 237}, DIJKSTRA};
+		Button buttonStartBfs = { {310, 260}, 35, 20, "BFS", {316, 267}, BFS};
+		Button buttonStartDfs = { {380, 260}, 35, 20, "DFS", {386, 267}, DFS};
+		Button buttonStartDijkstra = { {450, 260}, 75, 20, "DIJKSTRA", {456, 267}, DIJKSTRA};
+		Button buttonStartPrim = { {540, 260}, 44, 20, "PRIM", {546, 267}, PRIM};
 
 		buttons.push_back(buttonGenerateGraph);
 		buttons.push_back(buttonShowCosts);
 		buttons.push_back(buttonStartBfs);
 		buttons.push_back(buttonStartDfs);
 		buttons.push_back(buttonStartDijkstra);
+		buttons.push_back(buttonStartPrim);
 	}
 
 	void drawButtons() {
@@ -301,6 +332,9 @@ private:
 
 		//reset state dijkstra
 		animationDijkstraOn = false;
+
+		//reset state prim
+		animationPrimOn = false;
 	}
 
 	void checkButtonsPressed(const olc::vi2d& mousePos) {
@@ -312,6 +346,10 @@ private:
 
 				//handle mouse pressed
 				if (GetMouse(0).bPressed) {
+
+					if (sourceNode == -1)
+						sourceNode = 0;
+
 					switch (btn.type) {
 					case GENERATE: //button generate graph
 						resetStateAnimation();
@@ -325,15 +363,25 @@ private:
 					case BFS: //button start bfs
 						resetStateAnimation();
 						animationBfsOn = true;
+						steps = G.BFS(sourceNode);
 						break;
 					
 					case DFS: //button start dfs
 						resetStateAnimation();
 						animationDfsOn = true;
+						steps = G.DFS(sourceNode);
 						break;
+
 					case DIJKSTRA: //button start dijkstra
 						resetStateAnimation();
 						animationDijkstraOn = true;
+						steps = G.DIJKSTRA(sourceNode);
+						break;
+
+					case PRIM: //button start prim
+						resetStateAnimation();
+						animationPrimOn = true;
+						steps = G.PRIM(sourceNode);
 						break;
 
 					default:
@@ -403,6 +451,18 @@ private:
 		DrawString(310, 60, "Dist:");
 	}
 
+	void drawTablePrim() {
+		int xStart = 355;
+		int yNode = 22;
+
+		for (const auto& node_button : buttonsNodes) {
+			DrawString(xStart + node_button.idNumber * 24, yNode, node_button.idCh);
+		}
+
+		DrawString(310, 40, "Prev:");
+		DrawString(310, 60, "Total cost:");
+	}
+
 	void drawTables() {
 
 
@@ -416,6 +476,10 @@ private:
 
 		if (animationDijkstraOn) {
 			drawTableDijkstra();
+		}
+
+		if (animationPrimOn) {
+			drawTablePrim();
 		}
 	}
 

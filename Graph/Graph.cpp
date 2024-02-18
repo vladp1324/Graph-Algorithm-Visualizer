@@ -28,13 +28,12 @@ void Graph::generateNodes()
 
 void Graph::dfs(const int& nc, bool ver[], const Edge& e) const
 {
-	for (const auto& mc : v[nc]) {
-		int nv = mc.id;
-
+	for (const auto& mc : adj[nc]) {
+		int nv = mc.first;
+	
 		if ((nc == e.idn1 && nv == e.idn2) ||
-			(nc == e.idn2 && nv == e.idn1)
-			) {
-			//nu folosi muchia
+			(nc == e.idn2 && nv == e.idn1)) {
+			//don't use edge
 			continue;
 		}
 
@@ -48,11 +47,11 @@ void Graph::dfs(const int& nc, bool ver[], const Edge& e) const
 void Graph::refreshGraph()
 {
 	for (int i = 0; i < nrNodes; i++)
-		v[i].clear();
+		adj[i].clear();
 
 	for (const auto& e : edges) {
-		v[e.idn1].push_back(nodes[e.idn2]);
-		v[e.idn2].push_back(nodes[e.idn1]);
+		adj[e.idn1].push_back({ e.idn2, e.cost});
+		adj[e.idn2].push_back({ e.idn1, e.cost});
 	}
 }
 
@@ -74,7 +73,6 @@ void Graph::generateEdges()
 		if (!simulateLineCollision(nodes[e.idn1].pos, nodes[e.idn2].pos, getNodesPositions(nodes)))
 			edgesCopy.push_back(e);
 	}
-
 	edges = edgesCopy;
 	refreshGraph();
 
@@ -83,25 +81,21 @@ void Graph::generateEdges()
 	int nrMinDeleteEdges = 1;
 	int nrDeletedEdges = nrMinDeleteEdges + rand() % (nrMaxDeleteEdges - nrMinDeleteEdges + 1) - 1;
 	nrEdges = nrNodes + rand() % (nrNodes / 2);
-
+	
 	while (nrEdges < edges.size()) {
-		edgesCopy.clear();
 		int randomEdge = rand() % edges.size();
 		bool ver[N_MAX];
 		std::fill(ver, ver + N_MAX, 0);
 
 		dfs(edges[randomEdge].idn1, ver, edges[randomEdge]);
 		if (ver[edges[randomEdge].idn2]) {
-			for (int i = 0; i < edges.size(); i++) {
-				if (randomEdge != i) {
-					edgesCopy.push_back(edges[i]);
-				}
-			}
+			edges.erase(edges.begin() + randomEdge);
 
-			edges = edgesCopy;
 			refreshGraph(); //se poate mai eficient
 		}
 	}
+	
+	refreshGraph();
 }
 
 
@@ -124,19 +118,13 @@ std::vector<edge_for_anim> Graph::BFS(const int& source) const
 		int nc = q.front();
 		q.pop();
 
-		for (const auto& e : edges) {
-			if (e.idn1 != nc && e.idn2 != nc)
-				continue;
+		for(const auto& e : adj[nc]) {
+			int nv = e.first;
 
-			Node nv = nodes[e.idn2];
-
-			if (e.idn2 == nc)
-				nv = nodes[e.idn1];
-
-			if (d[nv.id] == -1) {
-				d[nv.id] = d[nc] + 1;
-				q.push(nv.id);
-				ans.push_back(edge_for_anim{ {nc, nv.id}, d[nv.id] });
+			if (d[nv] == -1) {
+				d[nv] = d[nc] + 1;
+				q.push(nv);
+				ans.push_back(edge_for_anim{ {nc, nv}, d[nv] });
 			}
 
 		}
@@ -153,23 +141,17 @@ void Graph::dfs_animation(const int& nc, bool vis[], int& time)
 	vis[nc] = true;
 	nrNotVis--;
 
-	for (const auto& e : edges) {
-		if (e.idn1 != nc && e.idn2 != nc)
-			continue;
+	for(const auto& e : adj[nc]){
+		int nv = e.first;
 
-		Node nv = nodes[e.idn2];
-
-		if (e.idn2 == nc)
-			nv = nodes[e.idn1];
-
-		if (not vis[nv.id]) {
+		if (not vis[nv]) {
 			time++;
-			dfs_anim.push_back(edge_for_anim{ { nc, nv.id }, time });
-			dfs_animation(nv.id, vis, time);
+			dfs_anim.push_back(edge_for_anim{ { nc, nv }, time });
+			dfs_animation(nv, vis, time);
 
 			if (nrNotVis > 0) {
 				time++;
-				dfs_anim.push_back(edge_for_anim{ { nv.id, nc }, time });
+				dfs_anim.push_back(edge_for_anim{ { nv, nc }, time });
 			}
 		}
 	}
@@ -201,20 +183,16 @@ std::vector<edge_for_anim> Graph::DIJKSTRA(const int& source) const
 
 	std::priority_queue < std::pair < int, std::pair <int, int> > > pq;
 	pq.push({ 0, {source, source} });
+
 	while (!pq.empty()) {
 		int nc = pq.top().second.first;
 		int prev = pq.top().second.second;
 		pq.pop();
 
 		if (!vis[nc]) {
-			for (const auto& e : edges) {
-				if (e.idn1 != nc && e.idn2 != nc)
-					continue;
-
-				int cnv = e.cost;
-				int nv = e.idn2;
-				if (e.idn2 == nc)
-					nv = e.idn1;
+			for(const auto& e : adj[nc]){
+				int cnv = e.second;
+				int nv = e.first;
 
 				if (cnv + d[nc] < d[nv]) {
 					d[nv] = cnv + d[nc];
@@ -229,6 +207,44 @@ std::vector<edge_for_anim> Graph::DIJKSTRA(const int& source) const
 	}
 
 	ans.erase(ans.begin());
+
+	return ans;
+}
+
+std::vector<edge_for_anim> Graph::PRIM(const int& source) const
+{
+	bool vis[N_MAX + 1];
+	std::fill(vis, vis + N_MAX, false);
+
+	std::priority_queue < std::pair <int, std::pair <int, int> > > pq; //cost | current node | prev node
+
+	std::vector<edge_for_anim> ans;
+
+	pq.push({ 0, {source, -1} });
+	while (!pq.empty()) {
+		int nc = pq.top().second.first;
+		int nod = pq.top().second.second;
+		int c = pq.top().first;
+		pq.pop();
+		
+		if (vis[nc])
+			continue;
+
+		if (!vis[nc]) {
+			for(const auto& e : adj[nc]){
+				int cst = e.second;
+				int nv = e.first;
+
+				if (!vis[nv]) {
+					pq.push({ -cst, {nv, nc} });
+				}
+			}
+			vis[nc] = true;
+		}
+
+		if (nod != -1)
+			ans.push_back({{nod, nc}, -c});
+	}
 
 	return ans;
 }
