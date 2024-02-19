@@ -91,7 +91,7 @@ void Graph::generateEdges()
 		if (ver[edges[randomEdge].idn2]) {
 			edges.erase(edges.begin() + randomEdge);
 
-			refreshGraph(); //se poate mai eficient
+			refreshGraph();
 		}
 	}
 	
@@ -107,65 +107,63 @@ std::vector<edge_for_anim> Graph::BFS(const int& source) const
 	std::fill(d, d + N_MAX, -1);
 	std::fill(prev, prev + N_MAX, -1);
 
-	std::queue<int> q;
+	std::queue<std::pair<int, int>> q;
 	std::vector<edge_for_anim> ans;
 
 	d[source] = 0;
-	q.push(source);
-
+	q.push({source, source});
 
 	while (!q.empty()) {
-		int nc = q.front();
+		int nc = q.front().first;
+		int prev = q.front().second;
 		q.pop();
+
+		ans.push_back(edge_for_anim{ {prev, nc, d[nc]}, VISITED });
 
 		for(const auto& e : adj[nc]) {
 			int nv = e.first;
 
 			if (d[nv] == -1) {
 				d[nv] = d[nc] + 1;
-				q.push(nv);
-				ans.push_back(edge_for_anim{ {nc, nv}, d[nv] });
+				q.push({ nv, nc});
+				ans.push_back(edge_for_anim{ {nc, nv}, MARKED});
 			}
-
 		}
+
 	}
 
 	return ans;
 }
 
-void Graph::dfs_animation(const int& nc, bool vis[], int& time)
+void Graph::dfs_animation(const int& nc, const int& prev, bool vis[], int& time)
 {
-	if (nrNotVis == 0)
-		return;
-
 	vis[nc] = true;
-	nrNotVis--;
+	time++;
+
+	dfs_anim.push_back(edge_for_anim{ { prev, nc, time }, MARKED });
 
 	for(const auto& e : adj[nc]){
 		int nv = e.first;
 
-		if (not vis[nv]) {
-			time++;
-			dfs_anim.push_back(edge_for_anim{ { nc, nv }, time });
-			dfs_animation(nv, vis, time);
-
-			if (nrNotVis > 0) {
-				time++;
-				dfs_anim.push_back(edge_for_anim{ { nv, nc }, time });
-			}
+		if (vis[nv] == 0) {
+			dfs_animation(nv, nc, vis, time);
 		}
 	}
+	
+	time++;
+
+	dfs_anim.push_back(edge_for_anim{ { nc, prev, time }, VISITED });
 }
 
 std::vector<edge_for_anim> Graph::DFS(const int& source)
 {
 	dfs_anim.clear();
 	bool vis[N_MAX];
-	std::fill(vis, vis + N_MAX, false);
+	std::fill(vis, vis + N_MAX, 0);
 	int time = 0;
 	nrNotVis = nodes.size();
 
-	dfs_animation(source, vis, time);
+	dfs_animation(source, source, vis, time);
 
 	return dfs_anim;
 }
@@ -190,6 +188,9 @@ std::vector<edge_for_anim> Graph::DIJKSTRA(const int& source) const
 		pq.pop();
 
 		if (!vis[nc]) {
+			vis[nc] = true;
+			ans.push_back(edge_for_anim{ { prev, nc, d[nc] }, VISITED});
+			
 			for(const auto& e : adj[nc]){
 				int cnv = e.second;
 				int nv = e.first;
@@ -197,16 +198,11 @@ std::vector<edge_for_anim> Graph::DIJKSTRA(const int& source) const
 				if (cnv + d[nc] < d[nv]) {
 					d[nv] = cnv + d[nc];
 					pq.push({ -d[nv], {nv, nc} });
+					ans.push_back(edge_for_anim{ { nc, nv }, MARKED });
 				}
 			}
-
-			vis[nc] = true;
-			ans.push_back(edge_for_anim{ { prev, nc}, d[nc] });
 		}
-
 	}
-
-	ans.erase(ans.begin());
 
 	return ans;
 }
@@ -220,10 +216,10 @@ std::vector<edge_for_anim> Graph::PRIM(const int& source) const
 
 	std::vector<edge_for_anim> ans;
 
-	pq.push({ 0, {source, -1} });
+	pq.push({ 0, {source, source} });
 	while (!pq.empty()) {
 		int nc = pq.top().second.first;
-		int nod = pq.top().second.second;
+		int prev = pq.top().second.second;
 		int c = pq.top().first;
 		pq.pop();
 		
@@ -231,19 +227,19 @@ std::vector<edge_for_anim> Graph::PRIM(const int& source) const
 			continue;
 
 		if (!vis[nc]) {
+			vis[nc] = true;
+			ans.push_back({{prev, nc, -c}, VISITED});
+
 			for(const auto& e : adj[nc]){
 				int cst = e.second;
 				int nv = e.first;
 
 				if (!vis[nv]) {
 					pq.push({ -cst, {nv, nc} });
+					ans.push_back({ {nc, nv}, MARKED });
 				}
 			}
-			vis[nc] = true;
 		}
-
-		if (nod != -1)
-			ans.push_back({{nod, nc}, -c});
 	}
 
 	return ans;

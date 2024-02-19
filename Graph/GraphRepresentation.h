@@ -16,7 +16,12 @@ struct Edge {
 	bool operator==(const Edge& e) const { return this->idn1 == e.idn1 && this->idn2 == e.idn2; }
 };
 
+enum AnimType {
+	MARKED,
+	VISITED
+};
+
 struct edge_for_anim {
 	Edge e;
-	int dist;
+	AnimType type;
 };

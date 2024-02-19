@@ -28,7 +28,7 @@ private:
 
 	void generateEdges();
 
-	void dfs_animation(const int& nc, bool vis[], int& time);
+	void dfs_animation(const int& nc, const int& prev, bool vis[], int& time);
 
 
 public:

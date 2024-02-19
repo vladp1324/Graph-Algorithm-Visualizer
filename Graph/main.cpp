@@ -80,26 +80,36 @@ private:
 		if (animationBfsOn == false)
 			return;
 
-		//draw in table source
-		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
-		DrawString(355 + steps[0].e.idn1 * 24, 60, "0");
-
 		//draw edges
 		for (int i = 0; i <= index; i++) {
 			Edge edge = steps[i].e;
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
 			
-			DrawLine(node1.pos, node2.pos, olc::RED);
-			
-			//draw in table
-			char letterChar = steps[i].e.idn1 + 'A';
-			std::string letter = std::string(1, letterChar);
-			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
-			DrawString(355 + steps[i].e.idn2 * 24, 60, std::to_string(steps[i].dist));
-			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
-		}
+			if (steps[i].type == VISITED) {
+				DrawLine(node1.pos, node2.pos, olc::RED);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
 
+				//draw in table
+				char letterChar = steps[i].e.idn1 + 'A';
+				std::string letter = std::string(1, letterChar);
+				
+				if (sourceNode == steps[i].e.idn2)
+					letter = "-";
+
+				DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+				
+				int z = 0;
+				if (steps[i].e.cost > 9)
+					z = 5;
+
+				DrawString(355 + steps[i].e.idn2 * 24 - z, 60, std::to_string(steps[i].e.cost));
+			}
+			else {
+				DrawLine(node1.pos, node2.pos, olc::YELLOW);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+			}
+		}
 
 		static float ed = 0;
 
@@ -116,11 +126,11 @@ private:
 		if (animationDfsOn == false)
 			return;
 
-		//draw source node
-		char letterChar = steps[0].e.idn1 + 'A';
-		std::string letter = std::string(1, letterChar);
-		DrawString(365, 40, letter);
-		DrawString(365, 80, std::to_string(0));
+		char letterChar;
+		std::string letter;
+
+		int indexYellow = 0;
+		int indexRed = 0;
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
@@ -128,21 +138,39 @@ private:
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
 
-			DrawLine(node1.pos, node2.pos, olc::RED);
+			if (steps[i].type == VISITED) {
+				DrawLine(node1.pos, node2.pos, olc::RED);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				DrawCircle(nodes[steps[i].e.idn1].pos, RADIUS + 1, olc::RED);
 
-			//draw in table
-			int yVal = 0;
-			int xVal = 0;
-			if (365 + i * 24 + 24 >= 590) {
-				yVal += 20;
-				xVal += 240;
+				//draw in table
+				letterChar = steps[i].e.idn1 + 'A';
+				letter = std::string(1, letterChar);
+				DrawString(310 + indexRed * 24, 100, letter);
+
+				int z = 0;
+				if (steps[i].e.cost > 9)
+					z = 5;
+
+				DrawString(310 + indexRed * 24 - z, 120, std::to_string(steps[i].e.cost));
+				indexRed++;
 			}
+			else {
+				DrawLine(node1.pos, node2.pos, olc::YELLOW);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+			
+				//draw in table
+				letterChar = steps[i].e.idn2 + 'A';
+				letter = std::string(1, letterChar);
+				DrawString(310 + indexYellow * 24, 40, letter);
+				
+				int z = 0;
+				if (steps[i].e.cost > 9)
+					z = 5;
 
-			char letterChar = steps[i].e.idn2 + 'A';
-			std::string letter = std::string(1, letterChar);
-			DrawString(365 + i * 24 + 24 - xVal, 40 + yVal, letter);
-			DrawString(365 + i * 24 + 24 - xVal - 0.015*xVal, 80 + yVal, std::to_string(steps[i].dist));
-			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				DrawString(310 + indexYellow * 24 - z, 60, std::to_string(steps[i].e.cost));
+				indexYellow++;
+			}
 		}
 
 		static float ed = 0;
@@ -153,16 +181,11 @@ private:
 			ed = 0;
 		}
 		ed += deltaTime;
-
 	}
 
 	void UpdateDijkstraAnimation(const float& deltaTime) {
 		if (animationDijkstraOn == false)
 			return;
-
-		//draw in table source
-		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
-		DrawString(355 + steps[0].e.idn1 * 24, 60, "0");
 
 		//draw edges
 		for (int i = 0; i <= index; i++) {
@@ -170,15 +193,28 @@ private:
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
 
-			DrawLine(node1.pos, node2.pos, olc::RED);
+			if (steps[i].type == VISITED) {
+				DrawLine(node1.pos, node2.pos, olc::RED);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
 
-			//draw in table
-			char letterChar = steps[i].e.idn1 + 'A';
-			std::string letter = std::string(1, letterChar);
+				//draw in table
+				char letterChar = steps[i].e.idn1 + 'A';
+				std::string letter = std::string(1, letterChar);
 
-			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
-			DrawString(355 + steps[i].e.idn2 * 24, 60, std::to_string(steps[i].dist));
-			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				if (sourceNode == steps[i].e.idn2)
+					letter = "-";
+				DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+			
+				int z = 0;
+				if (steps[i].e.cost > 9)
+					z = 5;
+
+				DrawString(355 + steps[i].e.idn2 * 24 - z, 60, std::to_string(steps[i].e.cost));
+			}
+			else{
+				DrawLine(node1.pos, node2.pos, olc::YELLOW);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+			}
 		}
 
 		static float ed = 0;
@@ -199,24 +235,30 @@ private:
 
 		int totalCost = 0;
 
-		//draw in table source
-		DrawString(355 + steps[0].e.idn1 * 24, 40, "-");
-
 		//draw edges
 		for (int i = 0; i <= index; i++) {
 			Edge edge = steps[i].e;
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
 
-			DrawLine(node1.pos, node2.pos, olc::RED);
+			if (steps[i].type == VISITED) {
+				DrawLine(node1.pos, node2.pos, olc::RED);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				//draw in table
+				char letterChar = steps[i].e.idn1 + 'A';
+				std::string letter = std::string(1, letterChar);
 
-			//draw in table
-			char letterChar = steps[i].e.idn1 + 'A';
-			std::string letter = std::string(1, letterChar);
+				if (sourceNode == steps[i].e.idn2)
+					letter = "-";
 
-			totalCost += steps[i].dist;
-			DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
-			DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				totalCost += steps[i].e.cost;
+				DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+			}
+			else{
+				DrawLine(node1.pos, node2.pos, olc::YELLOW);
+				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+			}
+
 		}
 
 		DrawString(400, 60, std::to_string(totalCost));
@@ -239,7 +281,7 @@ private:
 
 	void drawEdges() {
 		for (const auto& edge : edges) {
-			DrawLine(nodes[edge.idn1].pos, nodes[edge.idn2].pos, olc::YELLOW);
+			DrawLine(nodes[edge.idn1].pos, nodes[edge.idn2].pos, olc::GREEN);
 		}
 	}
 
@@ -435,8 +477,8 @@ private:
 	}
 
 	void drawTableDfs() {
-		DrawString(310, 40, "Order:");
-		DrawString(310, 80, "Time:");
+		DrawString(310, 20, "Time to reach:");
+		DrawString(310, 80, "Time to visit:");
 	}
 
 	void drawTableDijkstra() {
@@ -448,7 +490,7 @@ private:
 		}
 
 		DrawString(310, 40, "Prev:");
-		DrawString(310, 60, "Dist:");
+		DrawString(310, 60, "Cost:");
 	}
 
 	void drawTablePrim() {
@@ -464,8 +506,6 @@ private:
 	}
 
 	void drawTables() {
-
-
 		if (animationBfsOn) {
 			drawTableBfs();
 		}
