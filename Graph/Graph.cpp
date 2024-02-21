@@ -98,8 +98,6 @@ void Graph::generateEdges()
 	refreshGraph();
 }
 
-
-
 std::vector<edge_for_anim> Graph::BFS(const int& source) const
 {
 	int d[N_MAX];

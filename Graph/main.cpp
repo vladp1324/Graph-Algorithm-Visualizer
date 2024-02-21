@@ -22,7 +22,10 @@ private:
 		BFS,
 		DFS,
 		DIJKSTRA,
-		PRIM
+		PRIM,
+		AUTO_ANIMATION,
+		PREV,
+		NEXT
 	};
 
 	//buttons
@@ -51,16 +54,19 @@ private:
 	bool animationDfsOn;
 	bool animationDijkstraOn;
 	bool animationPrimOn;
-
 	bool showCosts;
+	bool autoAnimation;
 
 	bool isButtonSelected;
 	
-	int index = 0;
+	int index = -1;
 	std::vector<edge_for_anim> steps;
 
 	void constructGraph() {
-		showCosts = false;
+		//auto animation: on
+		autoAnimation = true;
+
+		//showCosts = false;
 		sourceNode = -1;
 		buttonsNodes.clear();
 
@@ -85,41 +91,44 @@ private:
 			Edge edge = steps[i].e;
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
+			int cost = edge.cost;
+			AnimType type = steps[i].type;
 			
-			if (steps[i].type == VISITED) {
+			if (type == VISITED) {
 				DrawLine(node1.pos, node2.pos, olc::RED);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				DrawCircle(node2.pos, RADIUS + 1, olc::RED);
 
 				//draw in table
-				char letterChar = steps[i].e.idn1 + 'A';
+				char letterChar = node1.id + 'A';
 				std::string letter = std::string(1, letterChar);
 				
-				if (sourceNode == steps[i].e.idn2)
+				if (sourceNode == node2.id)
 					letter = "-";
 
-				DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+				DrawString(355 + node2.id * 24, 40, letter);
 				
 				int z = 0;
-				if (steps[i].e.cost > 9)
+				if (cost > 9)
 					z = 5;
 
-				DrawString(355 + steps[i].e.idn2 * 24 - z, 60, std::to_string(steps[i].e.cost));
+				DrawString(355 + node2.id * 24 - z, 60, std::to_string(cost));
 			}
 			else {
 				DrawLine(node1.pos, node2.pos, olc::YELLOW);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+				DrawCircle(node2.pos, RADIUS + 1, olc::YELLOW);
 			}
 		}
 
 		static float ed = 0;
 
-		if (ed > 1.0f) {
-			if(index + 1 < steps.size())
-				index++;
-			ed = 0;
+		if (autoAnimation) {
+			if (ed > 1.0f) {
+				if (index + 1 < steps.size())
+					index++;
+				ed = 0;
+			}
+			ed += deltaTime;
 		}
-
-		ed += deltaTime;
 	}
 
 	void UpdateDFSAnimation(const float& deltaTime) {
@@ -137,50 +146,54 @@ private:
 			Edge edge = steps[i].e;
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
+			int cost = edge.cost;
+			AnimType type = steps[i].type;
 
-			if (steps[i].type == VISITED) {
+			if (type == VISITED) {
 				DrawLine(node1.pos, node2.pos, olc::RED);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
-				DrawCircle(nodes[steps[i].e.idn1].pos, RADIUS + 1, olc::RED);
+				//DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				DrawCircle(node1.pos, RADIUS + 1, olc::RED);
 
 				//draw in table
-				letterChar = steps[i].e.idn1 + 'A';
+				letterChar = node1.id + 'A';
 				letter = std::string(1, letterChar);
 				DrawString(310 + indexRed * 24, 100, letter);
 
 				int z = 0;
-				if (steps[i].e.cost > 9)
+				if (cost > 9)
 					z = 5;
 
-				DrawString(310 + indexRed * 24 - z, 120, std::to_string(steps[i].e.cost));
+				DrawString(310 + indexRed * 24 - z, 120, std::to_string(cost));
 				indexRed++;
 			}
 			else {
 				DrawLine(node1.pos, node2.pos, olc::YELLOW);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+				DrawCircle(node2.pos, RADIUS + 1, olc::YELLOW);
 			
 				//draw in table
-				letterChar = steps[i].e.idn2 + 'A';
+				letterChar = node2.id + 'A';
 				letter = std::string(1, letterChar);
 				DrawString(310 + indexYellow * 24, 40, letter);
 				
 				int z = 0;
-				if (steps[i].e.cost > 9)
+				if (cost > 9)
 					z = 5;
 
-				DrawString(310 + indexYellow * 24 - z, 60, std::to_string(steps[i].e.cost));
+				DrawString(310 + indexYellow * 24 - z, 60, std::to_string(cost));
 				indexYellow++;
 			}
 		}
 
 		static float ed = 0;
 
-		if (ed > 1.0f) {
-			if (index + 1 < steps.size())
-				index++;
-			ed = 0;
+		if (autoAnimation) {
+			if (ed > 1.0f) {
+				if (index + 1 < steps.size())
+					index++;
+				ed = 0;
+			}
+			ed += deltaTime;
 		}
-		ed += deltaTime;
 	}
 
 	void UpdateDijkstraAnimation(const float& deltaTime) {
@@ -192,40 +205,43 @@ private:
 			Edge edge = steps[i].e;
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
+			int cost = edge.cost;
+			AnimType type = steps[i].type;
 
-			if (steps[i].type == VISITED) {
+			if (type == VISITED) {
 				DrawLine(node1.pos, node2.pos, olc::RED);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				DrawCircle(node2.pos, RADIUS + 1, olc::RED);
 
 				//draw in table
-				char letterChar = steps[i].e.idn1 + 'A';
+				char letterChar = node1.id + 'A';
 				std::string letter = std::string(1, letterChar);
 
-				if (sourceNode == steps[i].e.idn2)
+				if (sourceNode == node2.id)
 					letter = "-";
-				DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+				DrawString(355 + node2.id * 24, 40, letter);
 			
 				int z = 0;
-				if (steps[i].e.cost > 9)
+				if (cost > 9)
 					z = 5;
 
-				DrawString(355 + steps[i].e.idn2 * 24 - z, 60, std::to_string(steps[i].e.cost));
+				DrawString(355 + node2.id * 24 - z, 60, std::to_string(cost));
 			}
 			else{
 				DrawLine(node1.pos, node2.pos, olc::YELLOW);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+				DrawCircle(node2.pos, RADIUS + 1, olc::YELLOW);
 			}
 		}
 
 		static float ed = 0;
 
-		if (ed > 1.0f) {
-			if (index + 1 < steps.size())
-				index++;
-			ed = 0;
+		if (autoAnimation) {
+			if (ed > 1.0f) {
+				if (index + 1 < steps.size())
+					index++;
+				ed = 0;
+			}
+			ed += deltaTime;
 		}
-
-		ed += deltaTime;
 	}
 
 	void UpdatePrimAnimation(const float& deltaTime)
@@ -240,23 +256,25 @@ private:
 			Edge edge = steps[i].e;
 			Node node1 = nodes[edge.idn1];
 			Node node2 = nodes[edge.idn2];
+			int cost = edge.cost;
+			AnimType type = steps[i].type;
 
-			if (steps[i].type == VISITED) {
+			if (type == VISITED) {
 				DrawLine(node1.pos, node2.pos, olc::RED);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::RED);
+				DrawCircle(node2.pos, RADIUS + 1, olc::RED);
 				//draw in table
-				char letterChar = steps[i].e.idn1 + 'A';
+				char letterChar = node1.id + 'A';
 				std::string letter = std::string(1, letterChar);
 
-				if (sourceNode == steps[i].e.idn2)
+				if (sourceNode == node2.id)
 					letter = "-";
 
-				totalCost += steps[i].e.cost;
-				DrawString(355 + steps[i].e.idn2 * 24, 40, letter);
+				totalCost += cost;
+				DrawString(355 + node2.id * 24, 40, letter);
 			}
 			else{
 				DrawLine(node1.pos, node2.pos, olc::YELLOW);
-				DrawCircle(nodes[steps[i].e.idn2].pos, RADIUS + 1, olc::YELLOW);
+				DrawCircle(node2.pos, RADIUS + 1, olc::YELLOW);
 			}
 
 		}
@@ -265,13 +283,14 @@ private:
 
 		static float ed = 0;
 
-		if (ed > 1.0f) {
-			if (index + 1 < steps.size())
-				index++;
-			ed = 0;
+		if (autoAnimation) {
+			if (ed > 1.0f) {
+				if (index + 1 < steps.size())
+					index++;
+				ed = 0;
+			}
+			ed += deltaTime;
 		}
-
-		ed += deltaTime;
 	}
 
 	void drawScreenBorder() {
@@ -341,19 +360,31 @@ private:
 	}
 
 	void initButtons() {
-		Button buttonGenerateGraph = { {60, 260}, 75, 20, "Generate", {66, 267}, GENERATE};
-		Button buttonShowCosts = { {200, 260}, 50, 20, "Costs", {206, 267}, COSTS};
-		Button buttonStartBfs = { {310, 260}, 35, 20, "BFS", {316, 267}, BFS};
-		Button buttonStartDfs = { {380, 260}, 35, 20, "DFS", {386, 267}, DFS};
-		Button buttonStartDijkstra = { {450, 260}, 75, 20, "DIJKSTRA", {456, 267}, DIJKSTRA};
-		Button buttonStartPrim = { {540, 260}, 44, 20, "PRIM", {546, 267}, PRIM};
+		Button buttonGenerateGraph = { {30, 260}, 75, 20, "Generate", {36, 267}, GENERATE};
+		Button buttonShowCosts = { {230, 260}, 50, 20, "Costs", {236, 267}, COSTS};
+		
+		Button buttonStartBfs = { {405, 230}, 35, 20, "BFS", {411, 237}, BFS};
+		Button buttonStartDfs = { {405, 260}, 35, 20, "DFS", {411, 267}, DFS};
+		Button buttonStartDijkstra = { {320, 260}, 75, 20, "DIJKSTRA", {326, 267}, DIJKSTRA};
+		Button buttonStartPrim = { {335, 230}, 44, 20, "PRIM", {341, 237}, PRIM};
+
+		Button buttonAutoAnimation = { {500, 230}, 74, 20, "", {506, 237}, AUTO_ANIMATION};
+		Button buttonPrev = { {500, 260}, 20, 20, "<", {506, 267}, PREV };
+		Button buttonNext = { {554, 260}, 20, 20, ">", {560, 267}, NEXT };
+
+
 
 		buttons.push_back(buttonGenerateGraph);
 		buttons.push_back(buttonShowCosts);
+
 		buttons.push_back(buttonStartBfs);
 		buttons.push_back(buttonStartDfs);
 		buttons.push_back(buttonStartDijkstra);
 		buttons.push_back(buttonStartPrim);
+
+		buttons.push_back(buttonAutoAnimation);
+		buttons.push_back(buttonPrev);
+		buttons.push_back(buttonNext);
 	}
 
 	void drawButtons() {
@@ -364,7 +395,7 @@ private:
 	}
 
 	void resetStateAnimation() {
-		index = 0;
+		index = -1;
 
 		//reset state bfs
 		animationBfsOn = false;
@@ -377,6 +408,17 @@ private:
 
 		//reset state prim
 		animationPrimOn = false;
+	}
+
+	void handleAutoAnimation() {
+		for (auto& btn : buttons)
+			if (btn.type == AUTO_ANIMATION) {
+
+				if (autoAnimation)
+					btn.text = "AUTO:ON";
+				else
+					btn.text = "AUTO:OFF";
+			}
 	}
 
 	void checkButtonsPressed(const olc::vi2d& mousePos) {
@@ -399,7 +441,7 @@ private:
 						break;
 					
 					case COSTS: //button show costs
-						showCosts = (bool) (1 - (int)showCosts);
+						showCosts = 1 - showCosts;
 						break;
 					
 					case BFS: //button start bfs
@@ -426,12 +468,30 @@ private:
 						steps = G.PRIM(sourceNode);
 						break;
 
+					case AUTO_ANIMATION: //button auto animation: on/off
+						autoAnimation = 1 - autoAnimation;
+						break;
+
+					case PREV: //button previous animation state
+						if(index - 1 >= -1)
+							index--;
+						break;
+
+					case NEXT: //button next animation state
+						if(index + 1 < steps.size())
+							index++;
+						break;
+
 					default:
 						break;
 					}
 				}
 			}
 		}
+	}
+
+	bool checkAnimationOn() {
+		return animationBfsOn || animationDfsOn || animationDijkstraOn || animationPrimOn;
 	}
 
 	void checkButtonsNodesPressed(const olc::vi2d& mousePos) {
@@ -444,6 +504,7 @@ private:
 
 				if (GetMouse(0).bPressed) {
 					resetStateAnimation();
+					//if(!checkAnimationOn())
 					sourceNode = node_button.idNumber;
 				}
 
@@ -545,6 +606,8 @@ public:
 		drawTables();
 
 		handleKeys();
+
+		handleAutoAnimation();
 		
 		return true;
 	}
