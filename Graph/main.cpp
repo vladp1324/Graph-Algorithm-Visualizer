@@ -296,6 +296,7 @@ private:
 	void drawScreenBorder() {
 		DrawRect(10, 10, ScreenWidth() - 20, ScreenHeight() - 20);
 		DrawLine(300, 10, 300, ScreenHeight() - 10);
+		DrawLine(10, 250, 300, 250);
 	}
 
 	void drawEdges() {
@@ -510,7 +511,25 @@ private:
 
 				if (node_button.idNumber == sourceNode && GetMouse(0).bHeld) {
 					isButtonSelected = true;
+					olc::vi2d prevPos = nodes[sourceNode].pos;
+
 					nodes[sourceNode].pos = { mousePos.x, mousePos.y };
+
+					//right line
+					if (checkCollisionLineCircle({ 300, 10 }, { 300, ScreenHeight() - 10 }, { nodes[sourceNode].pos }))
+						nodes[sourceNode].pos = prevPos;
+
+					//left line
+					if (checkCollisionLineCircle({ 10, 10 }, { 10, ScreenHeight() - 10 }, { nodes[sourceNode].pos }))
+						nodes[sourceNode].pos = prevPos;
+
+					//top line
+					if (checkCollisionLineCircle({ 10, 10 }, { 300, 10 }, { nodes[sourceNode].pos }))
+						nodes[sourceNode].pos = prevPos;
+
+					//bottom line
+					if (checkCollisionLineCircle({10, 250}, { 300, 250 }, { nodes[sourceNode].pos }))
+						nodes[sourceNode].pos = prevPos;
 				}
 
 				if (GetMouse(0).bReleased)
