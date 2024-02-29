@@ -3,8 +3,6 @@
 #include "GraphRepresentation.h"
 #include <queue>
 
-#define N_MAX 10 //max nodes
-
 class Graph
 {
 private:

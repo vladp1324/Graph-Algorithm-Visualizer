@@ -25,3 +25,6 @@ struct edge_for_anim {
 	Edge e;
 	AnimType type;
 };
+
+#define RADIUS 9
+#define N_MAX 10 //max nodes

@@ -1,11 +1,11 @@
+#define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 #include "Graph.h"
 #include "Collision.h"
-#include <conio.h>
 #include <stdio.h> 
 #include <stdlib.h>
 
-class Example : public olc::PixelGameEngine {
+class GraphVisualizer : public olc::PixelGameEngine {
 
 private:
 	//variables
@@ -604,7 +604,7 @@ private:
 	}
 
 public:
-	Example() {
+	GraphVisualizer() {
 		sAppName = "GraphVisualizer";
 		constructGraph();
 	}
@@ -633,7 +633,7 @@ public:
 };
 
 int main() {
-	Example demo;
+	GraphVisualizer demo;
 	
 	if (demo.Construct(600, 300, 2, 2))
 		demo.Start();

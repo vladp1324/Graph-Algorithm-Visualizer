@@ -1,5 +1,6 @@
 #pragma once
 #include "olcPixelGameEngine.h"
+#include "GraphRepresentation.h"
 
 bool checkCollisionCircles(const olc::vi2d& c1, const olc::vi2d& c2, const int& nrCircles);
 
